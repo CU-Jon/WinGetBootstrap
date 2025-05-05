@@ -12,6 +12,11 @@ function Install-NuGetProvider {
     param ()
 
     Begin {
+        # Forward -Verbose to everything we run in this scope
+        if ($PSCmdlet.MyInvocation.BoundParameters.ContainsKey('Verbose')) {
+            $PSDefaultParameterValues['*:Verbose'] = $true   # turns verbose on
+        }
+
         # Stop on critical errors
         $ErrorActionPreference = 'Stop'
         Write-Verbose 'Starting Install-NuGetProvider.'
@@ -34,15 +39,15 @@ function Install-NuGetProvider {
         } catch {
             Write-Warning 'NuGet provider not found, installing now.'
             try {
-                Install-PackageProvider -Name NuGet -ForceBootstrap -Scope AllUsers -Force -Confirm:$false -ErrorAction Stop -Verbose
+                Install-PackageProvider -Name NuGet -ForceBootstrap -Scope AllUsers -Force -Confirm:$false -ErrorAction Stop
                 Write-Verbose 'NuGet provider installed successfully.'
             } catch {
                 Write-Warning "Initial Install-PackageProvider failed: $_"
                 Write-Verbose 'Attempting remediation by updating PowerShellGet & PackageManagement modules.'
                 try {
-                    Install-Module -Name PowerShellGet,PackageManagement -Scope AllUsers -Force -AllowClobber -Confirm:$false -ErrorAction Stop -Verbose
+                    Install-Module -Name PowerShellGet,PackageManagement -Scope AllUsers -Force -AllowClobber -Confirm:$false -ErrorAction Stop
                     Write-Verbose 'Updated PowerShellGet & PackageManagement modules.'
-                    Install-PackageProvider -Name NuGet -ForceBootstrap -Scope AllUsers -Force -Confirm:$false -ErrorAction Stop -Verbose
+                    Install-PackageProvider -Name NuGet -ForceBootstrap -Scope AllUsers -Force -Confirm:$false -ErrorAction Stop
                     Write-Verbose 'NuGet provider installed after remediation.'
                 } catch {
                     Write-Error "Failed to install NuGet provider after remediation: $_"
@@ -54,7 +59,7 @@ function Install-NuGetProvider {
         # Import the provider
         try {
             Write-Verbose 'Importing NuGet package provider...'
-            Import-PackageProvider -Name NuGet -Force -ErrorAction Stop -Verbose
+            Import-PackageProvider -Name NuGet -Force -ErrorAction Stop
             Write-Verbose 'NuGet provider imported.'
         } catch {
             Write-Error "Import-PackageProvider failed: $_"
@@ -64,6 +69,11 @@ function Install-NuGetProvider {
 
     End {
         Write-Verbose 'Install-NuGetProvider completed.'
+
+        # Remove the explicit -Verbose from the session, keeps the scope clean
+        if ($PSCmdlet.MyInvocation.BoundParameters.ContainsKey('Verbose')) {
+            $PSDefaultParameterValues.Remove('*:Verbose')   # turns verbose off
+        }
     }
 }
 
@@ -81,7 +91,12 @@ function Install-WinGetModule {
     [CmdletBinding()]
     param ()
 
-    Begin {
+    Begin {        
+        # Forward -Verbose to everything we run in this scope
+        if ($PSCmdlet.MyInvocation.BoundParameters.ContainsKey('Verbose')) {
+            $PSDefaultParameterValues['*:Verbose'] = $true   # turns verbose on
+        }
+
         $ErrorActionPreference = 'Stop'
         Write-Verbose 'Starting Install-WinGetModule.'
     }
@@ -99,7 +114,7 @@ function Install-WinGetModule {
         } else {
             Write-Warning 'WinGet module not found, installing now.'
             try {
-                Install-Module -Name Microsoft.WinGet.Client -Scope AllUsers -Force -AllowClobber -Confirm:$false -ErrorAction Stop -Verbose
+                Install-Module -Name Microsoft.WinGet.Client -Scope AllUsers -Force -AllowClobber -Confirm:$false -ErrorAction Stop
                 Write-Verbose 'WinGet module installed successfully.'
             } catch {
                 Write-Error "Install-Module Microsoft.WinGet.Client failed: $_"
@@ -110,7 +125,7 @@ function Install-WinGetModule {
         # Import the module
         try {
             Write-Verbose 'Importing Microsoft.WinGet.Client module...'
-            Import-Module -Name Microsoft.WinGet.Client -Force -ErrorAction Stop -Verbose
+            Import-Module -Name Microsoft.WinGet.Client -Force -ErrorAction Stop
             Write-Verbose 'Microsoft.WinGet.Client module imported.'
         } catch {
             Write-Error "Import-Module Microsoft.WinGet.Client failed: $_"
@@ -120,7 +135,7 @@ function Install-WinGetModule {
         # Repair WinGet package manager
         try {
             Write-Verbose 'Repairing WinGet package manager...'
-            Repair-WinGetPackageManager -AllUsers -Force -Latest -ErrorAction Stop -Verbose
+            Repair-WinGetPackageManager -AllUsers -Force -Latest -ErrorAction Stop
             Write-Verbose 'WinGet package manager repair completed.'
         } catch {
             Write-Warning "Repair-WinGetPackageManager encountered an issue: $_"
@@ -129,6 +144,11 @@ function Install-WinGetModule {
 
     End {
         Write-Verbose 'Install-WinGetModule completed.'
+
+        # Remove the explicit -Verbose from the session, keeps the scope clean
+        if ($PSCmdlet.MyInvocation.BoundParameters.ContainsKey('Verbose')) {
+            $PSDefaultParameterValues.Remove('*:Verbose')   # turns verbose off
+        }
     }
 }
 

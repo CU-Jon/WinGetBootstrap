@@ -92,11 +92,11 @@ function Install-WinGetModule {
         Install-NuGetProvider
 
         # Install or verify WinGet module
-        try {
-            Write-Verbose 'Checking for existing Microsoft.WinGet.Client module...'
-            $mod = Get-Module -ListAvailable -Name Microsoft.WinGet.Client -ErrorAction Stop
+        Write-Verbose 'Checking for existing Microsoft.WinGet.Client module...'
+        $mod = Get-Module -ListAvailable -Name Microsoft.WinGet.Client -ErrorAction Stop
+        if ($mod) {
             Write-Verbose "WinGet module found (v$($mod.Version))."
-        } catch {
+        } else {
             Write-Warning 'WinGet module not found, installing now.'
             try {
                 Install-Module -Name Microsoft.WinGet.Client -Scope AllUsers -Force -AllowClobber -Confirm:$false -ErrorAction Stop -Verbose
@@ -120,7 +120,7 @@ function Install-WinGetModule {
         # Repair WinGet package manager
         try {
             Write-Verbose 'Repairing WinGet package manager...'
-            Repair-WinGetPackageManager -AllUsers -Force -Latest -Confirm:$false -ErrorAction Stop -Verbose
+            Repair-WinGetPackageManager -AllUsers -Force -Latest -ErrorAction Stop -Verbose
             Write-Verbose 'WinGet package manager repair completed.'
         } catch {
             Write-Warning "Repair-WinGetPackageManager encountered an issue: $_"

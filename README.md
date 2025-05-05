@@ -24,7 +24,7 @@ Since this module is not published to PSGallery, install it directly from GitHub
 1. **Clone the repository**
 
    ```powershell
-   git clone https://github.com/yourrepo/WinGetBootstrap.git
+   git clone https://github.com/CU-Jon/WinGetBootstrap.git
    ```
 
 2. **Copy the module folder** to one of your PowerShell module paths:

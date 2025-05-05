@@ -29,20 +29,20 @@ function Install-NuGetProvider {
         # Check for existing NuGet provider
         try {
             Write-Verbose 'Checking for existing NuGet provider...'
-            $prov = Get-PackageProvider -Name NuGet -ErrorAction Stop
+            $prov = Get-PackageProvider -ListAvailable -Name NuGet -ErrorAction Stop
             Write-Verbose "NuGet provider found (v$($prov.Version))."
         } catch {
-            Write-Warning 'NuGet provider not found — installing now.'
+            Write-Warning 'NuGet provider not found, installing now.'
             try {
-                Install-PackageProvider -Name NuGet -ForceBootstrap -Scope AllUsers -ErrorAction Stop -Verbose
+                Install-PackageProvider -Name NuGet -ForceBootstrap -Scope AllUsers -Force -Confirm:$false -ErrorAction Stop -Verbose
                 Write-Verbose 'NuGet provider installed successfully.'
             } catch {
                 Write-Warning "Initial Install-PackageProvider failed: $_"
                 Write-Verbose 'Attempting remediation by updating PowerShellGet & PackageManagement modules.'
                 try {
-                    Install-Module -Name PowerShellGet,PackageManagement -Scope AllUsers -Force -AllowClobber -ErrorAction Stop -Verbose
+                    Install-Module -Name PowerShellGet,PackageManagement -Scope AllUsers -Force -AllowClobber -Confirm:$false -ErrorAction Stop -Verbose
                     Write-Verbose 'Updated PowerShellGet & PackageManagement modules.'
-                    Install-PackageProvider -Name NuGet -ForceBootstrap -Scope AllUsers -ErrorAction Stop -Verbose
+                    Install-PackageProvider -Name NuGet -ForceBootstrap -Scope AllUsers -Force -Confirm:$false -ErrorAction Stop -Verbose
                     Write-Verbose 'NuGet provider installed after remediation.'
                 } catch {
                     Write-Error "Failed to install NuGet provider after remediation: $_"
@@ -97,9 +97,9 @@ function Install-WinGetModule {
             $mod = Get-Module -ListAvailable -Name Microsoft.WinGet.Client -ErrorAction Stop
             Write-Verbose "WinGet module found (v$($mod.Version))."
         } catch {
-            Write-Warning 'WinGet module not found — installing now.'
+            Write-Warning 'WinGet module not found, installing now.'
             try {
-                Install-Module -Name Microsoft.WinGet.Client -Scope AllUsers -Force -AllowClobber -ErrorAction Stop -Verbose
+                Install-Module -Name Microsoft.WinGet.Client -Scope AllUsers -Force -AllowClobber -Confirm:$false -ErrorAction Stop -Verbose
                 Write-Verbose 'WinGet module installed successfully.'
             } catch {
                 Write-Error "Install-Module Microsoft.WinGet.Client failed: $_"
@@ -120,7 +120,7 @@ function Install-WinGetModule {
         # Repair WinGet package manager
         try {
             Write-Verbose 'Repairing WinGet package manager...'
-            Repair-WinGetPackageManager -AllUsers -Force -Latest -ErrorAction Stop -Verbose
+            Repair-WinGetPackageManager -AllUsers -Force -Latest -Confirm:$false -ErrorAction Stop -Verbose
             Write-Verbose 'WinGet package manager repair completed.'
         } catch {
             Write-Warning "Repair-WinGetPackageManager encountered an issue: $_"

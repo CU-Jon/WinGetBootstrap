@@ -1,6 +1,6 @@
 # WinGetBootstrap
 
-\[![Language: PowerShell](https://img.shields.io/badge/language-PowerShell-blue.svg)]
+[![Language: PowerShell](https://img.shields.io/badge/language-PowerShell-blue.svg)](https://docs.microsoft.com/powershell/)
 [![PowerShell Version](https://img.shields.io/badge/PowerShell-%5E5.1%20%7C%20%5E7-blue.svg)](https://docs.microsoft.com/powershell/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 

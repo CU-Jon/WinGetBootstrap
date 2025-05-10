@@ -5,11 +5,12 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A lightweight PowerShell module to **bootstrap the NuGet provider** and **install/repair the Microsoft.WinGet.Client** module on Windows systems.
+This module is especially useful for installing WinGet on server-based operating systems, or for leveraging WinGet during Microsoft Endpoint Configuration Manager task sequences, since the SYSTEM account that task sequences run under doesn't have access to a working version of WinGet out-of-the-box. Although untested, this should also assist with deploying WinGet apps via Intune.
 
 ## Features
 
 * **Install-NuGetProvider**: Ensures TLS 1.2, installs or updates the NuGet PackageProvider, and imports it.
-* **Install-WinGetModule**: Uses the NuGet provider to install or update the WinGet PowerShell module, imports it, and repairs the underlying WinGet package manager.
+* **Install-WinGetModule**: Uses the NuGet provider to install or update the WinGet PowerShell module, imports it, and installs/repairs the underlying WinGet package manager. If the NuGet provider is unavailable, this will install/update the provider before proceeding.
 
 ## Requirements
 
@@ -23,7 +24,7 @@ Since this module is not published to PSGallery, install it directly from GitHub
 
 1. **Clone the repository**
 
-   ```powershell
+   ```
    git clone https://github.com/CU-Jon/WinGetBootstrap.git
    ```
 
@@ -37,7 +38,7 @@ Since this module is not published to PSGallery, install it directly from GitHub
    * **Current user only:**
 
      ```powershell
-     Copy-Item -Path .\WinGetBootstrap -Destination "$HOME\Documents\WindowsPowerShell\Modules" -Recurse -Force
+     Copy-Item -Path .\WinGetBootstrap -Destination "$env:USERPROFILE\Documents\WindowsPowerShell\Modules" -Recurse -Force
      ```
 
 3. **(Optional) Import directly** from the cloned location without copying:

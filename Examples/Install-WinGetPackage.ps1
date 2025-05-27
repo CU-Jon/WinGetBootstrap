@@ -7,6 +7,9 @@ param (
     [ValidateSet("System", "User", "Any", "SystemOrUnknown", "UserOrUnknown", "", $null, IgnoreCase = $true)]
     [Parameter(Mandatory = $false)]
     [string]$Scope = "SystemOrUnknown",
+    [ValidateSet("Default", "Interactive", "Silent", "", $null, IgnoreCase = $true)]
+    [Parameter(Mandatory = $false)]
+    [string]$Mode = 'Default',
     [Parameter(Mandatory = $false)]
     [switch]$Force,
     [Parameter(Mandatory = $false)]
@@ -67,6 +70,10 @@ if ($AllowHashMismatch) {
 
 if ($Scope -ne $null -and $Scope -ne "") {
     $Arguments += " -Scope `"$Scope`""
+}
+
+if ($Mode -ne $null -and $Mode -ne "") {
+    $Arguments += " -Mode `"$Mode`""
 }
 
 # Add on the default parameters

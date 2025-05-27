@@ -51,7 +51,7 @@ function Install-NuGetProvider {
                     Write-Verbose 'NuGet provider installed after remediation.'
                 } catch {
                     Write-Error "Failed to install NuGet provider after remediation: $_"
-                    throw
+                    throw $_
                 }
             }
         }
@@ -63,7 +63,7 @@ function Install-NuGetProvider {
             Write-Verbose 'NuGet provider imported.'
         } catch {
             Write-Error "Import-PackageProvider failed: $_"
-            throw
+            throw $_
         }
     }
 
@@ -118,7 +118,7 @@ function Install-WinGetModule {
                 Write-Verbose 'WinGet module installed successfully.'
             } catch {
                 Write-Error "Install-Module Microsoft.WinGet.Client failed: $_"
-                throw
+                throw $_
             }
         }
 
@@ -129,7 +129,7 @@ function Install-WinGetModule {
             Write-Verbose 'Microsoft.WinGet.Client module imported.'
         } catch {
             Write-Error "Import-Module Microsoft.WinGet.Client failed: $_"
-            throw
+            throw $_
         }
 
         # Repair WinGet package manager
@@ -139,6 +139,7 @@ function Install-WinGetModule {
             Write-Verbose 'WinGet package manager repair completed.'
         } catch {
             Write-Warning "Repair-WinGetPackageManager encountered an issue: $_"
+            throw $_
         }
     }
 

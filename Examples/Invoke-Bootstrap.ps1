@@ -1,13 +1,19 @@
 [CmdletBinding()]
 param (
     [Parameter(Mandatory = $false)]
-    [string]$ModulePath
+    [string]$ModulePath,
+    [ValidateSet('SilentlyContinue', 'Continue', 'Inquire', 'Break', 'Stop', IgnoreCase = $true)]
+    [Parameter(Mandatory = $false)]
+    [string]$ProgressPreference = 'SilentlyContinue'
 )
 
+# Set $ProgressPreference
+$global:ProgressPreference = $ProgressPreference
+
 if (-not $ModulePath) {
-    $ScriptPath = $MyInvocation.MyCommand.Path
-    $ScriptDir = Split-Path -Path $ScriptPath -Parent
-    $ModulePath = Join-Path -Path $ScriptDir -ChildPath 'WinGetBootstrap.psm1'
+    $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    $ModuleDir = Split-Path -Path $ScriptDir -Parent
+    $ModulePath = Join-Path -Path $ModuleDir -ChildPath 'WinGetBootstrap.psm1'
 }
 
 if (-not (Test-Path -Path $ModulePath -PathType Leaf)) {
@@ -25,14 +31,14 @@ try {
 
 # Check if -Verbose is set
 if ($PSCmdlet.MyInvocation.BoundParameters.ContainsKey('Verbose')) {
-    $Verbose = "`$true"
+    $Expression = "Install-WinGetModule -Verbose"
 } else {
-    $Verbose = "`$false"
+    $Expression = "Install-WinGetModule"
 }
 
 try {
     Write-Verbose "Installing WinGet module"
-    Invoke-Expression "Install-WinGetModule -Verbose:$Verbose" -ErrorAction Stop
+    Invoke-Expression $Expression -ErrorAction Stop
 } catch {
     Write-Error "Failed to install WinGet module: $_"
     exit 1

@@ -4,15 +4,22 @@ param (
     [string]$Name,
     [Parameter(Mandatory = $false)]
     [string]$Id,
+    [ValidateSet("System", "User", "Any", "SystemOrUnknown", "UserOrUnknown", "", $null, IgnoreCase = $true)]
     [Parameter(Mandatory = $false)]
-    [string]$Scope = "System",
+    [string]$Scope = "SystemOrUnknown",
     [Parameter(Mandatory = $false)]
     [switch]$Force,
     [Parameter(Mandatory = $false)]
     [switch]$AllowHashMismatch,
     [Parameter(Mandatory = $false)]
-    [string]$Source = "winget"
+    [string]$Source = "winget",
+    [ValidateSet('SilentlyContinue', 'Continue', 'Inquire', 'Break', 'Stop', IgnoreCase = $true)]
+    [Parameter(Mandatory = $false)]
+    [string]$ProgressPreference = 'SilentlyContinue'
 )
+
+# Set $ProgressPreference
+$global:ProgressPreference = $ProgressPreference
 
 # Check for the Microsoft.WinGet.Client module
 if (-not (Get-Module -Name Microsoft.WinGet.Client -ListAvailable)) {
@@ -47,7 +54,7 @@ if ($Name) {
 }
 
 if ($Id) {
-    $Arguments = "-Id `"$Id`""
+    $Arguments = "-Id `"$Id`" -MatchOption Equals"
 }
 
 if ($Force) {
@@ -58,8 +65,17 @@ if ($AllowHashMismatch) {
     $Arguments += " -AllowHashMismatch"
 }
 
+if ($Scope -ne $null -and $Scope -ne "") {
+    $Arguments += " -Scope `"$Scope`""
+}
+
 # Add on the default parameters
-$Arguments += " -Scope `"$Scope`" -Source `"$Source`""
+$Arguments += " -Source `"$Source`" -Confirm:`$false"
+
+# Check if -Verbose is set
+if ($PSCmdlet.MyInvocation.BoundParameters.ContainsKey('Verbose')) {
+    $Arguments += " -Verbose"
+}
 
 # Run the Install-WinGetPackage command with the constructed arguments
 try {

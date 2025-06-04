@@ -4,7 +4,7 @@
 [![PowerShell Version](https://img.shields.io/badge/PowerShell-%5E5.1%20%7C%20%5E7-blue.svg)](https://docs.microsoft.com/powershell/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A lightweight PowerShell module to **bootstrap the NuGet provider** and **install/repair the Microsoft.WinGet.Client** module on Windows systems.
+A lightweight PowerShell module to **bootstrap the NuGet provider** and **install/repair the Microsoft.WinGet.Client** module on Windows systems.  
 This module is especially useful for installing WinGet on server-based operating systems, or for leveraging WinGet during Microsoft Endpoint Configuration Manager task sequences, since the SYSTEM account that task sequences run under doesn't have access to a working version of WinGet out-of-the-box. Although untested, this should also assist with deploying WinGet apps via Intune.
 
 ## Features
@@ -85,6 +85,91 @@ Install-NuGetProvider -Verbose
 # Install or repair WinGet module
 Install-WinGetModule -Verbose
 ```
+
+---
+
+## Example Scripts
+
+### [`Examples/Invoke-Bootstrap.ps1`](Examples/Invoke-Bootstrap.ps1)
+
+This script imports the `WinGetBootstrap` module and runs `Install-WinGetModule` with error handling and optional progress reporting.  
+It is useful for automating the full WinGet bootstrap process in a deployment or provisioning scenario.
+
+**Parameters:**
+
+- `-ModulePath <string>`  
+  Optional. Path to the `WinGetBootstrap.psm1` file. If not specified, the script will auto-detect the module location relative to itself.
+
+- `-ProgressPreference <string>`  
+  Optional. Sets `$ProgressPreference` for the session. Accepts: `SilentlyContinue`, `Continue`, `Inquire`, `Break`, `Stop`.  
+  Default: `SilentlyContinue`.
+
+**Example usage:**
+```powershell
+# Run with default options
+.\Examples\Invoke-Bootstrap.ps1
+
+# Specify a custom module path and show progress
+.\Examples\Invoke-Bootstrap.ps1 -ModulePath 'C:\Modules\WinGetBootstrap.psm1' -ProgressPreference Continue -Verbose
+```
+
+---
+
+### [`Examples/Install-WinGetPackage.ps1`](Examples/Install-WinGetPackage.ps1)
+
+This script installs a package using the `Microsoft.WinGet.Client` PowerShell module.  
+It checks for the module, imports it, and then calls `Install-WinGetPackage` with the provided parameters.
+
+**Parameters:**
+
+- `-Name <string>`  
+  The name of the package to install (mutually exclusive with `-Id`).
+
+- `-Id <string>`  
+  The package ID to install (mutually exclusive with `-Name`).
+
+- `-Override <string>`  
+  Optional. Passes an override string to the installer.
+
+- `-Scope <string>`  
+  Optional. Installation scope. Accepts: `System`, `User`, `Any`, `SystemOrUnknown`, `UserOrUnknown`.  
+  Default: `SystemOrUnknown`.
+
+- `-Mode <string>`  
+  Optional. Installation mode. Accepts: `Default`, `Interactive`, `Silent`.  
+  Default: `Default`.
+
+- `-Force`  
+  Optional. Forces installation even if the package is already installed.
+
+- `-AllowHashMismatch`  
+  Optional. Allows installation even if the hash does not match.
+
+- `-Source <string>`  
+  Optional. The package source. Default: `winget`.
+
+- `-ProgressPreference <string>`  
+  Optional. Sets `$ProgressPreference` for the session. Accepts: `SilentlyContinue`, `Continue`, `Inquire`, `Break`, `Stop`.  
+  Default: `SilentlyContinue`.
+
+**Usage examples:**
+```powershell
+# Install by name
+.\Examples\Install-WinGetPackage.ps1 -Name '7zip.7zip' -Verbose
+
+# Install by ID, silently, for all users
+.\Examples\Install-WinGetPackage.ps1 -Id 'Microsoft.Edge' -Mode Silent -Scope System -Verbose
+
+# Install with an override and allow hash mismatch
+.\Examples\Install-WinGetPackage.ps1 -Name 'SomeApp' -Override '/S' -AllowHashMismatch
+```
+
+**Notes:**
+- You must specify either `-Name` or `-Id`, but not both.
+- The script will error if the `Microsoft.WinGet.Client` module is not installed.
+- All parameters are optional except for `-Name` or `-Id`.
+
+---
 
 ## Contributing
 

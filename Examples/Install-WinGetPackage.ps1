@@ -4,6 +4,8 @@ param (
     [string]$Name,
     [Parameter(Mandatory = $false)]
     [string]$Id,
+    [Parameter(Mandatory = $false)]
+    [string]$Override,
     [ValidateSet("System", "User", "Any", "SystemOrUnknown", "UserOrUnknown", "", $null, IgnoreCase = $true)]
     [Parameter(Mandatory = $false)]
     [string]$Scope = "SystemOrUnknown",
@@ -58,6 +60,10 @@ if ($Name) {
 
 if ($Id) {
     $Arguments = "-Id `"$Id`" -MatchOption Equals"
+}
+
+if ($Override) {
+    $Arguments += " -Override `"$Override`""
 }
 
 if ($Force) {

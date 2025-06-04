@@ -2,7 +2,7 @@
     # Script module manifest for WinGetBootstrap
 
     RootModule        = 'WinGetBootstrap.psm1'
-    ModuleVersion     = '1.0.0'
+    ModuleVersion     = '1.0.1'
     GUID              = 'e1b8c2f9-3d4e-4f2b-a4b2-5f88a9d5e8c7'
     Author            = 'Jon Agramonte'
     CompanyName       = 'Clemson University CCIT'

@@ -106,6 +106,22 @@ function Install-WinGetModule {
         Write-Verbose 'Ensuring NuGet provider is available...'
         Install-NuGetProvider
 
+        # Ensure PSGallery repository exists and is trusted
+        try {
+            $psGallery = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
+            if (-not $psGallery) {
+                Write-Host 'PSGallery repository not found. Registering default PSGallery with trusted policy.'
+                Register-PSRepository -Default -InstallationPolicy Trusted
+            } elseif ($psGallery.InstallationPolicy -ne 'Trusted') {
+                Write-Host 'PSGallery repository found but not trusted. Setting installation policy to Trusted.'
+                Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+            } else {
+                Write-Host 'PSGallery repository is already configured and trusted.'
+            }
+        } catch {
+            Write-Warning "Failed to configure PSGallery repository: $_. Continuing with installation attempt."
+        }
+
         # Install or verify WinGet module
         Write-Verbose 'Checking for existing Microsoft.WinGet.Client module...'
         $mod = Get-Module -ListAvailable -Name Microsoft.WinGet.Client -ErrorAction Stop

@@ -107,34 +107,115 @@ function Install-WinGetModule {
         Install-NuGetProvider
 
         # Ensure PSGallery repository exists and is trusted
+        $psGalleryConfigured = $false
         try {
             $psGallery = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
             if (-not $psGallery) {
                 Write-Host 'PSGallery repository not found. Registering default PSGallery with trusted policy.'
-                Register-PSRepository -Default -InstallationPolicy Trusted
+                Register-PSRepository -Default -InstallationPolicy Trusted -ErrorAction Stop
+                $psGalleryConfigured = $true
             } elseif ($psGallery.InstallationPolicy -ne 'Trusted') {
                 Write-Host 'PSGallery repository found but not trusted. Setting installation policy to Trusted.'
-                Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+                Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
+                $psGalleryConfigured = $true
             } else {
                 Write-Host 'PSGallery repository is already configured and trusted.'
+                $psGalleryConfigured = $true
             }
         } catch {
-            Write-Warning "Failed to configure PSGallery repository: $_. Continuing with installation attempt."
+            Write-Warning "Failed to configure PSGallery repository: $_. Will use direct download method."
+            $psGalleryConfigured = $false
         }
 
         # Install or verify WinGet module
         Write-Verbose 'Checking for existing Microsoft.WinGet.Client module...'
-        $mod = Get-Module -ListAvailable -Name Microsoft.WinGet.Client -ErrorAction Stop
+        $mod = Get-Module -ListAvailable -Name Microsoft.WinGet.Client -ErrorAction SilentlyContinue
         if ($mod) {
             Write-Verbose "WinGet module found (v$($mod.Version))."
         } else {
             Write-Warning 'WinGet module not found, installing now.'
-            try {
-                Install-Module -Name Microsoft.WinGet.Client -Scope AllUsers -Force -AllowClobber -Confirm:$false -ErrorAction Stop
-                Write-Verbose 'WinGet module installed successfully.'
-            } catch {
-                Write-Error "Install-Module Microsoft.WinGet.Client failed: $_"
-                throw $_
+            
+            # Install the module from PowerShell Gallery
+            if ($psGalleryConfigured) {
+                try {
+                    Install-Module -Name Microsoft.WinGet.Client -Scope AllUsers -Force -AllowClobber -Confirm:$false -ErrorAction Stop
+                    Write-Verbose 'WinGet module installed successfully.'
+                } catch {
+                    Write-Warning "Install-Module failed: $_. Falling back to direct download method."
+                    $psGalleryConfigured = $false
+                }
+            }
+            
+            # Fallback: Direct download and installation if PSGallery configuration failed
+            if (-not $psGalleryConfigured) {
+                Write-Verbose 'Using direct download method to install Microsoft.WinGet.Client module'
+                
+                # Get latest version info from PowerShell Gallery API
+                $apiUrl = 'https://www.powershellgallery.com/api/v2/Packages?$filter=Id%20eq%20%27Microsoft.WinGet.Client%27&$orderby=Version%20desc&$top=1'
+                $packageInfo = Invoke-RestMethod -Uri $apiUrl -UseBasicParsing
+                $latestVersion = $packageInfo.properties.Version
+                $downloadUrl = "https://www.powershellgallery.com/api/v2/package/Microsoft.WinGet.Client/$latestVersion"
+                
+                Write-Verbose "Found latest version: $latestVersion"
+                Write-Verbose "Downloading from: $downloadUrl"
+                
+                # Create temporary directory for download
+                $tempDir = Join-Path $env:TEMP "WinGetClient_$(Get-Random)"
+                New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+                
+                try {
+                    # Download the package
+                    $packagePath = Join-Path $tempDir "Microsoft.WinGet.Client.$latestVersion.nupkg"
+                    Invoke-WebRequest -Uri $downloadUrl -OutFile $packagePath -UseBasicParsing
+                    
+                    # Extract the package (it's a zip file)
+                    $extractPath = Join-Path $tempDir "extracted"
+                    Add-Type -AssemblyName System.IO.Compression.FileSystem
+                    [System.IO.Compression.ZipFile]::ExtractToDirectory($packagePath, $extractPath)
+                    
+                    # Determine module installation path
+                    $moduleBasePath = "$env:ProgramFiles\WindowsPowerShell\Modules"
+                    $moduleInstallPath = Join-Path $moduleBasePath "Microsoft.WinGet.Client\$latestVersion"
+                    
+                    # Create module directory
+                    if (Test-Path $moduleInstallPath) {
+                        Remove-Item $moduleInstallPath -Recurse -Force
+                    }
+                    New-Item -ItemType Directory -Path $moduleInstallPath -Force | Out-Null
+                    
+                    # Copy module files (exclude package metadata files)
+                    $sourceFiles = Get-ChildItem $extractPath -Recurse | Where-Object { 
+                        $_.Name -notmatch '\.(nuspec|xml)$' -and 
+                        $_.FullName -notlike "*\_rels\*" -and 
+                        $_.FullName -notlike "*\package\*" -and
+                        $_.Name -ne '_rels' -and 
+                        $_.Name -ne 'package'
+                    }
+                    
+                    foreach ($file in $sourceFiles) {
+                        if ($file.PSIsContainer) {
+                            $destDir = $file.FullName.Replace($extractPath, $moduleInstallPath)
+                            New-Item -ItemType Directory -Path $destDir -Force | Out-Null
+                        } else {
+                            $destFile = $file.FullName.Replace($extractPath, $moduleInstallPath)
+                            $destDir = Split-Path $destFile -Parent
+                            if (-not (Test-Path $destDir)) {
+                                New-Item -ItemType Directory -Path $destDir -Force | Out-Null
+                            }
+                            Copy-Item $file.FullName -Destination $destFile -Force
+                        }
+                    }
+                    
+                    Write-Verbose "Microsoft.WinGet.Client module installed successfully via direct download to: $moduleInstallPath"
+                } catch {
+                    Write-Error "Failed to download and install module via direct method: $_"
+                    throw
+                } finally {
+                    # Clean up temporary directory
+                    if (Test-Path $tempDir) {
+                        Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+                    }
+                }
             }
         }
 

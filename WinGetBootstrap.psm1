@@ -150,10 +150,12 @@ function Install-WinGetModule {
             if (-not $psGalleryConfigured) {
                 Write-Verbose 'Using direct download method to install Microsoft.WinGet.Client module'
                 
-                # Get latest version info from PowerShell Gallery API
-                $apiUrl = 'https://www.powershellgallery.com/api/v2/Packages?$filter=Id%20eq%20%27Microsoft.WinGet.Client%27&$orderby=Version%20desc&$top=1'
+                # Get latest version info using FindPackagesById API which returns all versions
+                $apiUrl = "https://www.powershellgallery.com/api/v2/FindPackagesById()?id='Microsoft.WinGet.Client'"
                 $packageInfo = Invoke-RestMethod -Uri $apiUrl -UseBasicParsing
-                $latestVersion = $packageInfo.properties.Version
+                # Find the entry marked as the latest version
+                $latestPackage = $packageInfo | Where-Object { $_.properties.IsLatestVersion.'#text' -eq 'true' } | Select-Object -First 1
+                $latestVersion = $latestPackage.properties.Version
                 $downloadUrl = "https://www.powershellgallery.com/api/v2/package/Microsoft.WinGet.Client/$latestVersion"
                 
                 Write-Verbose "Found latest version: $latestVersion"
